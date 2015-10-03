@@ -1,0 +1,189 @@
+#!/usr/local/bin python
+#! -*- coding: utf-8 -*-
+
+import theano
+import theano.tensor as T
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.datasets import fetch_mldata
+from sklearn.cross_validation import train_test_split
+
+# original
+from layers import FullyConnectedLayer
+from utils import *
+from optimizers import *
+
+plt.style.use('ggplot')
+
+class MLP(object):
+	def __init__(self,
+				 rng,
+				 data,
+				 target,
+				 n_input=784,
+				 n_hidden=[500, 500, 500],
+				 n_output=10,
+				 optimizer=AdaDelta):
+
+		self.rng = rng
+		self.batchsize = 100
+
+		self.n_input = n_input
+		self.n_hidden = n_hidden
+		self.n_output = n_output
+		self.n_layer = len(n_hidden)
+
+		self.L1_reg = 0.0
+		self.L2_reg = 0.001
+
+		"""data pre-processing"""
+		self.x_train, self.x_test = data
+		self.y_train, self.y_test = target
+		self.n_train_batches = self.x_train.get_value(borrow=True).shape[0] / self.batchsize
+		self.n_test_batches = self.x_test.get_value(borrow=True).shape[0] / self.batchsize
+
+		"""symbol definition"""
+		self.index = T.lscalar()
+		self.x = T.matrix('x')
+		self.y = T.ivector('y')
+		self.train = T.iscalar('train')
+
+		"""network structure definition"""
+		self.layers = []
+		self.params = []
+		for i in xrange(self.n_layer+1):
+			"""for first hidden layer"""
+			if i == 0:
+				layer_n_input = self.n_input
+				layer_n_output = self.n_hidden[0]
+				layer_input = dropout(self.rng, self.x, self.train, p=0.1)
+				activation=relu
+			elif i != self.n_layer:
+				layer_n_input = self.n_hidden[i-1]
+				layer_n_output = self.n_hidden[i]
+				layer_input = dropout(self.rng, self.layers[-1].output, self.train)
+				activation=relu
+			else:
+				"""for output layer"""
+				layer_n_input = self.n_hidden[-1]
+				layer_n_output = self.n_output
+				layer_input = self.layers[-1].output
+				activation=None	
+
+
+			layer = FullyConnectedLayer(
+				self.rng,
+				input=layer_input,
+				n_input=layer_n_input,
+				n_output=layer_n_output,
+				activation=activation
+			)
+			self.layers.append(layer)
+			self.params.extend(layer.params)
+
+		"""regularization"""
+		# self.L1 = abs(self.h1.W).sum() + abs(self.pred_y.W).sum()
+		# self.L2 = abs(self.h1.W**2).sum() + abs(self.pred_y.W**2).sum()
+
+		"""loss accuracy error"""
+		self.result = Result(self.layers[-1].output, self.y)
+		self.loss = self.result.negative_log_likelihood()# + L1_reg*self.L1 + L2_reg*self.L2
+		self.accuracy = self.result.accuracy()
+		self.errors = self.result.errors()
+
+		"""parameters (i.e., weights and biases) for whole networks"""
+		# self.params
+
+		"""optimizer for learning parameters"""
+		self.optimizer = optimizer(params=self.params)
+		
+		"""definition for optimizing update"""
+		self.updates = self.optimizer.updates(self.loss)
+
+		self.train_model = theano.function(
+			inputs = [self.index],
+			outputs = [self.loss, self.accuracy],
+			updates = self.updates,
+			givens = {
+				self.x: self.x_train[self.index*self.batchsize: (self.index+1)*self.batchsize],
+				self.y: self.y_train[self.index*self.batchsize: (self.index+1)*self.batchsize],
+				self.train: np.cast['int32'](1)
+			},
+			mode = 'FAST_RUN'
+		)
+
+		self.test_model = theano.function(
+			inputs = [self.index],
+			outputs = [self.loss, self.accuracy],
+			givens = {
+				self.x: self.x_test[self.index*self.batchsize: (self.index+1)*self.batchsize],
+				self.y: self.y_test[self.index*self.batchsize: (self.index+1)*self.batchsize],
+				self.train: np.cast['int32'](0)
+			},
+			mode = 'FAST_RUN'
+		)
+
+	def train_and_test(self, n_epoch=50):
+		epoch = 0
+		accuracies = []
+		while epoch < n_epoch:
+			epoch += 1
+			sum_loss = 0
+			sum_accuracy = 0
+			for batch_index in xrange(self.n_train_batches):
+				batch_loss, batch_accuracy = self.train_model(batch_index)
+				sum_loss += batch_loss
+				sum_accuracy += batch_accuracy
+			loss = sum_loss / self.n_train_batches
+			accuracy = sum_accuracy / self.n_train_batches
+			print 'epoch: {}, train mean loss={}, train accuracy={}'.format(epoch, loss, accuracy)
+
+			sum_loss = 0
+			sum_accuracy = 0
+			for batch_index in xrange(self.n_test_batches):
+				batch_loss, batch_accuracy = self.test_model(batch_index)
+				sum_loss += batch_loss
+				sum_accuracy += batch_accuracy
+			loss = sum_loss / self.n_test_batches
+			accuracy = sum_accuracy / self.n_test_batches
+			accuracies.append(accuracy)
+
+			print 'epoch: {}, test mean loss={}, test accuracy={}'.format(epoch, loss, accuracy)
+			print ''
+		accuracies = np.array(accuracies)
+		return accuracies
+
+
+
+if __name__ == '__main__':
+	total = []
+	accuracies = []
+	dataset = load_data(1)
+	data, target = dataset
+	for i in range(30):
+		print (i+1)
+		random_state = i
+		n_input = data[0].get_value().shape[1]
+		n_hidden = [500]
+		n_output = 10
+		rng = np.random.RandomState(random_state)
+		mlp = MLP(rng,
+				  data,
+				  target,
+				  n_input=n_input,
+				  n_hidden=n_hidden,
+				  n_output=n_output,
+				  optimizer=SGD)
+		accs = mlp.train_and_test(n_epoch=20)
+		total.append(accs)
+	total = np.array(total)
+	for i in range(len(total[0])):
+		accuracies.append(np.mean(total[:,i]))
+	np.savetxt('sgd.csv', np.array(accuracies), delimiter=',')
+
+
+
+
+
+
+
