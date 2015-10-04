@@ -77,7 +77,7 @@ class AdaGrad(Optimizer):
 		return self.updates
 
 class RMSprop(Optimizer):
-	def __init__(self, learning_rate=0.01, alpha=0.99, eps=1e-8, params=None):
+	def __init__(self, learning_rate=0.001, alpha=0.99, eps=1e-8, params=None):
 		super(RMSprop, self).__init__(params=params)
 
 		self.learning_rate = learning_rate
