@@ -146,12 +146,12 @@ class MLP(object):
 
 			val_acc.append(0.0)
 			val_loss.append(0.0)
-			for batch_index in xrange(self.n_train_batches):
+			for batch_index in xrange(self.n_valid_batches):
 				batch_loss, batch_accuracy = self.train_model(batch_index)
 				val_acc[-1]  += batch_accuracy
 				val_loss[-1] += batch_loss
-			val_acc[-1]  /= self.n_train_batches
-			val_loss[-1] /= self.n_train_batches
+			val_acc[-1]  /= self.n_valid_batches
+			val_loss[-1] /= self.n_valid_batches
 			print 'epoch: {}, train mean loss={}, train accuracy={}'.format(epoch, val_loss[-1], val_acc[-1])
 
 		hist = {}
