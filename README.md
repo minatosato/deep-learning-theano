@@ -25,8 +25,8 @@ in `optimizers.py`
 
 #### Examples
 
-- Multi-Layered Perceptrons (`mlp.py`)
-- Convolutional Neural Networks (`cnn.py`)
+- Multi-Layer Perceptron (`mlp.py`)
+- Convolutional Neural Network (`cnn.py`)
 
 ### Requirements
 - [NumPy](http://www.numpy.org)
