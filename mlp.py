@@ -7,23 +7,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.datasets import fetch_mldata
 from sklearn.cross_validation import train_test_split
+from tqdm import tqdm
+import pandas as pd
 
 # original
 from layers import FullyConnectedLayer
 from utils import *
 from optimizers import *
 
+
 plt.style.use('ggplot')
 
 class MLP(object):
-	def __init__(self,
-				 rng,
-				 data,
-				 target,
-				 n_input=784,
-				 n_hidden=[500, 500, 500],
-				 n_output=10,
-				 optimizer=AdaDelta):
+	def __init__(self, rng, n_input=784, n_hidden=[500, 500, 500], n_output=10, optimizer=AdaDelta):
 
 		self.rng = rng
 		self.batchsize = 100
@@ -35,12 +31,6 @@ class MLP(object):
 
 		self.L1_reg = 0.0
 		self.L2_reg = 0.001
-
-		"""data pre-processing"""
-		self.x_train, self.x_test = data
-		self.y_train, self.y_test = target
-		self.n_train_batches = self.x_train.get_value(borrow=True).shape[0] / self.batchsize
-		self.n_test_batches = self.x_test.get_value(borrow=True).shape[0] / self.batchsize
 
 		"""symbol definition"""
 		self.index = T.lscalar()
@@ -100,6 +90,19 @@ class MLP(object):
 		"""definition for optimizing update"""
 		self.updates = self.optimizer.updates(self.loss)
 
+
+	def fit(self, x_train, y_train, x_valid, y_valid, batchsize=128, n_epoch=10):
+		self.batchsize = batchsize
+		self.n_epoch = n_epoch
+
+		"""data pre-processing"""
+		self.x_train, self.y_train = shared_data(x_train, y_train)
+		self.x_valid, self.y_valid = shared_data(x_valid, y_valid)
+		self.n_train_batches = self.x_train.get_value(borrow=True).shape[0] / self.batchsize
+		self.n_valid_batches = self.x_valid.get_value(borrow=True).shape[0] / self.batchsize
+
+		print "# of train mini-batches: " + str(self.n_train_batches)
+
 		self.train_model = theano.function(
 			inputs = [self.index],
 			outputs = [self.loss, self.accuracy],
@@ -116,42 +119,47 @@ class MLP(object):
 			inputs = [self.index],
 			outputs = [self.loss, self.accuracy],
 			givens = {
-				self.x: self.x_test[self.index*self.batchsize: (self.index+1)*self.batchsize],
-				self.y: self.y_test[self.index*self.batchsize: (self.index+1)*self.batchsize],
+				self.x: self.x_valid[self.index*self.batchsize: (self.index+1)*self.batchsize],
+				self.y: self.y_valid[self.index*self.batchsize: (self.index+1)*self.batchsize],
 				self.train: np.cast['int32'](0)
 			},
 			mode = 'FAST_RUN'
 		)
 
-	def train_and_test(self, n_epoch=50):
+
 		epoch = 0
-		accuracies = []
-		while epoch < n_epoch:
+		acc, loss = [], []
+		val_acc, val_loss = [], []
+
+		while epoch < self.n_epoch:
 			epoch += 1
-			sum_loss = 0
-			sum_accuracy = 0
+
+			acc.append(0.0)
+			loss.append(0.0)
+			for batch_index in tqdm(xrange(self.n_train_batches)):
+				batch_loss, batch_accuracy = self.train_model(batch_index)
+				acc[-1]  += batch_accuracy
+				loss[-1] += batch_loss
+			acc[-1]  /= self.n_train_batches
+			loss[-1] /= self.n_train_batches
+			print 'epoch: {}, train mean loss={}, train accuracy={}'.format(epoch, loss[-1], acc[-1])
+
+			val_acc.append(0.0)
+			val_loss.append(0.0)
 			for batch_index in xrange(self.n_train_batches):
 				batch_loss, batch_accuracy = self.train_model(batch_index)
-				sum_loss += batch_loss
-				sum_accuracy += batch_accuracy
-			loss = sum_loss / self.n_train_batches
-			accuracy = sum_accuracy / self.n_train_batches
-			print 'epoch: {}, train mean loss={}, train accuracy={}'.format(epoch, loss, accuracy)
+				val_acc[-1]  += batch_accuracy
+				val_loss[-1] += batch_loss
+			val_acc[-1]  /= self.n_train_batches
+			val_loss[-1] /= self.n_train_batches
+			print 'epoch: {}, train mean loss={}, train accuracy={}'.format(epoch, val_loss[-1], val_acc[-1])
 
-			sum_loss = 0
-			sum_accuracy = 0
-			for batch_index in xrange(self.n_test_batches):
-				batch_loss, batch_accuracy = self.test_model(batch_index)
-				sum_loss += batch_loss
-				sum_accuracy += batch_accuracy
-			loss = sum_loss / self.n_test_batches
-			accuracy = sum_accuracy / self.n_test_batches
-			accuracies.append(accuracy)
-
-			print 'epoch: {}, test mean loss={}, test accuracy={}'.format(epoch, loss, accuracy)
-			print ''
-		accuracies = np.array(accuracies)
-		return accuracies
+		hist = {}
+		hist["acc"] = acc
+		hist["loss"] = loss
+		hist["val_acc"] = val_acc
+		hist["val_loss"] = val_loss
+		return hist
 
 
 
@@ -160,26 +168,27 @@ if __name__ == '__main__':
 	accuracies = []
 	dataset = load_data(1)
 	data, target = dataset
-	for i in range(30):
-		print (i+1)
-		random_state = i
-		n_input = data[0].get_value().shape[1]
-		n_hidden = [500]
-		n_output = 10
-		rng = np.random.RandomState(random_state)
-		mlp = MLP(rng,
-				  data,
-				  target,
-				  n_input=n_input,
-				  n_hidden=n_hidden,
-				  n_output=n_output,
-				  optimizer=SGD)
-		accs = mlp.train_and_test(n_epoch=20)
-		total.append(accs)
-	total = np.array(total)
-	for i in range(len(total[0])):
-		accuracies.append(np.mean(total[:,i]))
-	np.savetxt('sgd.csv', np.array(accuracies), delimiter=',')
+
+	x_train, x_valid = data
+	y_train, y_valid = target
+
+	random_state = 1234
+	n_input = x_train.shape[1]
+	n_hidden = [784]
+	n_output = 10
+	rng = np.random.RandomState(random_state)
+
+	mlp = MLP(rng, n_input=n_input, n_hidden=n_hidden, n_output=n_output, optimizer=Adam)
+	hist = mlp.fit(x_train, y_train, x_valid, y_valid, 128, 10)
+
+	df = pd.DataFrame(hist)
+	df.index += 1
+	df.index.name = "epoch"
+
+	df[["acc", "val_acc"]].plot(linewidth=2, alpha=0.6)
+	plt.show()
+	df[["loss", "val_loss"]].plot(linewidth=2, alpha=0.6)
+	plt.show()
 
 
 

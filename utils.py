@@ -83,6 +83,12 @@ class Result(object):
 		else:
 			return NotImplementedError()
 
+def shared_data(x,y):
+	shared_x = theano.shared(np.asarray(x, dtype=theano.config.floatX), borrow=True)
+	shared_y = theano.shared(np.asarray(y, dtype=theano.config.floatX), borrow=True)
+
+	return shared_x, T.cast(shared_y, 'int32')
+
 def load_data(random_state=0):
 	print 'fetch MNIST dataset'
 	mnist = fetch_mldata('MNIST original')
@@ -96,14 +102,9 @@ def load_data(random_state=0):
 	target_test\
 	= train_test_split(mnist.data, mnist.target, random_state=random_state)
 
-	def shared_data(x,y):
-		shared_x = theano.shared(np.asarray(x, dtype=theano.config.floatX), borrow=True)
-		shared_y = theano.shared(np.asarray(y, dtype=theano.config.floatX), borrow=True)
 
-		return shared_x, T.cast(shared_y, 'int32')
-
-	data_train, target_train = shared_data(data_train, target_train)
-	data_test, target_test = shared_data(data_test, target_test)
+	# data_train, target_train = shared_data(data_train, target_train)
+	# data_test, target_test = shared_data(data_test, target_test)
 
 	return ([data_train, data_test], [target_train, target_test])
 
