@@ -4,7 +4,7 @@
 import theano
 import theano.tensor as T
 from theano.tensor.nnet import conv
-from theano.tensor.signal import downsample
+from theano.tensor.signal.pool import pool_2d
 import numpy as np
 from utils import *
 
@@ -80,10 +80,11 @@ class Convolutional2DLayer(object):
 
 class MaxPoolingLayer(object):
 	def __init__(self, input, poolsize=(2,2)):
-		pooled_out = downsample.max_pool_2d(
+		pooled_out = pool_2d(
 			input=input,
 			ds=poolsize,
-			ignore_border=True
+			ignore_border=True,
+			mode="max"
 		)
 		self.output = pooled_out
 
