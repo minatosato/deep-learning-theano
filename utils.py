@@ -3,8 +3,6 @@
 
 import theano
 import theano.tensor as T
-from theano.tensor.nnet import conv
-from theano.tensor.signal import downsample
 import numpy as np
 from sklearn.datasets import fetch_mldata
 from sklearn.cross_validation import train_test_split
@@ -47,7 +45,7 @@ def get_corrupted_input(rng, x, train, corruption_level=0.3):
 	return T.switch(T.neq(train, 0), masked_x, x)
 
 
-class Result(object):
+class Metric(object):
 	def __init__(self, x, y):
 		self.x = x
 		self.y = y
@@ -88,25 +86,6 @@ def shared_data(x,y):
 	shared_y = theano.shared(np.asarray(y, dtype=theano.config.floatX), borrow=True)
 
 	return shared_x, T.cast(shared_y, 'int32')
-
-def load_data(random_state=0):
-	print 'fetch MNIST dataset'
-	mnist = fetch_mldata('MNIST original')
-	mnist.data   = mnist.data.astype(np.float32)
-	mnist.data  /= 255
-	mnist.target = mnist.target.astype(np.int32)
-
-	data_train,\
-	data_test,\
-	target_train,\
-	target_test\
-	= train_test_split(mnist.data, mnist.target, random_state=random_state)
-
-
-	# data_train, target_train = shared_data(data_train, target_train)
-	# data_test, target_test = shared_data(data_test, target_test)
-
-	return ([data_train, data_test], [target_train, target_test])
 
 
 def build_shared_zeros(shape, name):

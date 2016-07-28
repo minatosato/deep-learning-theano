@@ -76,10 +76,10 @@ class MLP(object):
 		# self.L2 = abs(self.h1.W**2).sum() + abs(self.pred_y.W**2).sum()
 
 		"""loss accuracy error"""
-		self.result = Result(self.layers[-1].output, self.y)
-		self.loss = self.result.negative_log_likelihood()# + L1_reg*self.L1 + L2_reg*self.L2
-		self.accuracy = self.result.accuracy()
-		self.errors = self.result.errors()
+		self.metric = Metric(self.layers[-1].output, self.y)
+		self.loss = self.metric.negative_log_likelihood()# + L1_reg*self.L1 + L2_reg*self.L2
+		self.accuracy = self.metric.accuracy()
+		self.errors = self.metric.errors()
 
 		"""parameters (i.e., weights and biases) for whole networks"""
 		# self.params
@@ -164,22 +164,26 @@ class MLP(object):
 
 
 if __name__ == '__main__':
-	total = []
-	accuracies = []
-	dataset = load_data(1)
-	data, target = dataset
+	random_state = 1234
 
-	x_train, x_valid = data
-	y_train, y_valid = target
+	print 'fetch MNIST dataset'
+	mnist = fetch_mldata('MNIST original')
+	mnist.data   = mnist.data.astype(np.float32)
+	mnist.data  /= 255
+	mnist.target = mnist.target.astype(np.int32)
+
+	x_train, x_valid,\
+	y_train, y_valid \
+	= train_test_split(mnist.data, mnist.target, random_state=random_state)
 
 	random_state = 1234
 	n_input = x_train.shape[1]
-	n_hidden = [784]
+	n_hidden = [784, 784]
 	n_output = 10
 	rng = np.random.RandomState(random_state)
 
 	mlp = MLP(rng, n_input=n_input, n_hidden=n_hidden, n_output=n_output, optimizer=Adam)
-	hist = mlp.fit(x_train, y_train, x_valid, y_valid, 128, 10)
+	hist = mlp.fit(x_train, y_train, x_valid, y_valid, batchsize=128, n_epoch=10)
 
 	df = pd.DataFrame(hist)
 	df.index += 1
@@ -190,6 +194,7 @@ if __name__ == '__main__':
 	ax.set_ylabel("classification accuracy")
 	ax = df[["loss", "val_loss"]].plot(linewidth=2, alpha=0.6, ax=axes.flatten()[1])
 	ax.set_ylabel("loss function value")
+	plt.title("mlp example")
 	plt.show()
 
 
