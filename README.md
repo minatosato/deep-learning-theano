@@ -29,11 +29,11 @@ in `optimizers.py`
 - Convolutional Neural Networks (`cnn.py`)
 
 ### Requirements
-- NumPy
-- Theano == 0.8.2
-- Scikit-Learn
-- tqdm
-- Pandas (for visualization)
-- Matplotlib (for visualization)
+- [NumPy](http://www.numpy.org)
+- [Theano](http://deeplearning.net/software/theano/) == 0.8.2
+- [Scikit-Learn](http://scikit-learn.org/stable/)
+- [tqdm](https://pypi.python.org/pypi/tqdm)
+- [Pandas](http://pandas.pydata.org) (for visualization)
+- [Matplotlib](http://matplotlib.org) (for visualization)
 
 ![](https://dl.dropboxusercontent.com/u/38631959/deep-learning-theano.png)

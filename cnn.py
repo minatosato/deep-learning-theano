@@ -11,7 +11,7 @@ from sklearn.cross_validation import train_test_split
 
 from layers import FullyConnectedLayer
 from layers import Convolutional2DLayer
-from layers import MaxPoolingLayer
+from layers import MaxPooling2DLayer
 from layers import BatchNormalizationLayer
 from utils import *
 from optimizers import *
@@ -45,7 +45,7 @@ class CNN(object):
 
 		layer2_input = layer1.output.reshape((self.batchsize, 20, 24, 24))
 		layer2_input = relu(layer2_input)
-		layer2_input = MaxPoolingLayer(layer2_input, poolsize=(2, 2)).output
+		layer2_input = MaxPooling2DLayer(layer2_input, poolsize=(2, 2)).output
 
 		layer2 = Convolutional2DLayer(
 			self.rng,
@@ -57,7 +57,7 @@ class CNN(object):
 		layer3 = BatchNormalizationLayer(layer2.output, shape=(self.batchsize, 50, 8, 8))
 
 		layer4_input = relu(layer3.output)
-		layer4_input = MaxPoolingLayer(layer4_input, poolsize=(2, 2)).output
+		layer4_input = MaxPooling2DLayer(layer4_input, poolsize=(2, 2)).output
 		layer4_input = layer4_input.reshape((self.batchsize, 50*4*4))
 
 		layer4 = FullyConnectedLayer(

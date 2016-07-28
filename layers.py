@@ -78,7 +78,7 @@ class Convolutional2DLayer(object):
 		self.output = conv_out + self.b.dimshuffle('x', 0, 'x', 'x')
 		self.params = [self.W, self.b]
 
-class MaxPoolingLayer(object):
+class MaxPooling2DLayer(object):
 	def __init__(self, input, poolsize=(2,2)):
 		pooled_out = pool_2d(
 			input=input,
