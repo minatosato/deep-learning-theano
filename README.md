@@ -26,6 +26,7 @@ in `optimizers.py`
 #### Examples
 
 - Multi-Layer Perceptron (`mlp.py`)
+- Denoising Autoencoder (`da.py`)
 - Convolutional Neural Network (`cnn.py`)
 
 ### Requirements

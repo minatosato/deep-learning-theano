@@ -83,6 +83,9 @@ class Metric(object):
 
 def shared_data(x,y):
 	shared_x = theano.shared(np.asarray(x, dtype=theano.config.floatX), borrow=True)
+	if y is None:
+		return shared_x
+
 	shared_y = theano.shared(np.asarray(y, dtype=theano.config.floatX), borrow=True)
 
 	return shared_x, T.cast(shared_y, 'int32')
