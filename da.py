@@ -149,8 +149,7 @@ if __name__ == '__main__':
 			n_hidden=n_hidden,
 			corruption_level=0.3,
 			optimizer=Adam)
-	da.fit(x_train, x_valid, n_epoch=10)
-
+	hist = da.fit(x_train, x_valid, n_epoch=10)
 
 	df = pd.DataFrame(hist)
 	df.index += 1
