@@ -155,7 +155,7 @@ if __name__ == '__main__':
 	df.index += 1
 	df.index.name = "epoch"
 
-	df[["loss", "val_loss"]].plot(linewidth=2, alpha=0.6, ax=axes.flatten()[1])
+	df[["loss", "val_loss"]].plot(linewidth=2, alpha=0.6)
 	plt.ylabel("loss function value")
 	plt.title("denoising autoencoder example")
 	plt.show()
