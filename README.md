@@ -4,6 +4,20 @@
 ### About
 This repository is simple implementation of some deep learning algorithms.
 
+#### MNIST Examples
+##### Usage
+e.g., 
+```
+python mlp.py
+```
+
+##### Files
+- Multi-Layer Perceptron (`mlp.py`)
+- Denoising Autoencoder (`da.py`)
+- Sparse Autoencoder (`sa.py`)
+- Convolutional Neural Network (`cnn.py`)
+
+
 #### Layers
 in `layer.py`
 
@@ -22,12 +36,6 @@ in `optimizers.py`
 - RMSprop
 - AdaDelta
 - Adam
-
-#### Examples
-
-- Multi-Layer Perceptron (`mlp.py`)
-- Denoising Autoencoder (`da.py`)
-- Convolutional Neural Network (`cnn.py`)
 
 ### Requirements
 - [NumPy](http://www.numpy.org)
