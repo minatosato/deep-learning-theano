@@ -1,15 +1,18 @@
 #!/usr/local/bin python
 #! -*- coding: utf-8 -*-
 
+import sys,os
+sys.path.append(os.pardir)
+
 import theano
 import theano.tensor as T
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from layers import FullyConnectedLayer
-from optimizers import *
-from utils import *
+from dnn.layers import FullyConnectedLayer
+from dnn.optimizers import *
+from dnn.utils import *
 from tqdm import tqdm
 
 plt.style.use('ggplot')

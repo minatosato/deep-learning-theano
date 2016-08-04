@@ -1,6 +1,9 @@
 #!/usr/local/bin python
 #! -*- coding: utf-8 -*-
 
+import sys,os
+sys.path.append(os.pardir)
+
 import theano
 import theano.tensor as T
 import numpy as np
@@ -9,12 +12,12 @@ import matplotlib.pyplot as plt
 from sklearn.datasets import fetch_mldata
 from sklearn.cross_validation import train_test_split
 
-from layers import FullyConnectedLayer
-from layers import Convolutional2DLayer
-from layers import MaxPooling2DLayer
-from layers import BatchNormalizationLayer
-from utils import *
-from optimizers import *
+from dnn.layers import FullyConnectedLayer
+from dnn.layers import Convolutional2DLayer
+from dnn.layers import MaxPooling2DLayer
+from dnn.layers import BatchNormalizationLayer
+from dnn.utils import *
+from dnn.optimizers import *
 
 from tqdm import tqdm
 import pandas as pd
