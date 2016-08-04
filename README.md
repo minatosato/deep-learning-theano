@@ -8,18 +8,23 @@ This repository is simple implementation of some deep learning algorithms.
 ##### Usage
 e.g., 
 ```
+python example/mlp.py
+```
+or
+```
+cd example
 python mlp.py
 ```
 
 ##### Files
-- Multi-Layer Perceptron (`mlp.py`)
-- Denoising Autoencoder (`da.py`)
-- Sparse Autoencoder (`sa.py`)
-- Convolutional Neural Network (`cnn.py`)
+- Multi-Layer Perceptron (`example/mlp.py`)
+- Denoising Autoencoder (`example/da.py`)
+- Sparse Autoencoder (`example/sa.py`)
+- Convolutional Neural Network (`example/cnn.py`)
 
 
 #### Layers
-in `layer.py`
+in `dnn/layer.py`
 
 - Fully-Connected Layer
 - 2-Dimensional Convolutional Layer
@@ -28,7 +33,7 @@ in `layer.py`
 
 
 #### Optimizers
-in `optimizers.py`
+in `dnn/optimizers.py`
 
 - Stochastic Gradient Descent (SGD)
 - Momentum Stochastic Gradient Descent (Momentum SGD)
