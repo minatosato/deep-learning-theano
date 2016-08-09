@@ -135,9 +135,9 @@ if __name__ == '__main__':
 
 	print 'fetch MNIST dataset'
 	mnist = fetch_mldata('MNIST original')
-	mnist.data   = mnist.data.astype(np.float32)
+	mnist.data   = mnist.data.astype(np.float32)[:]
 	mnist.data  /= 255
-	mnist.target = mnist.target.astype(np.int32)
+	mnist.target = mnist.target.astype(np.int32)[:]
 
 	x_train, x_valid,\
 	y_train, y_valid \
@@ -152,7 +152,7 @@ if __name__ == '__main__':
 			n_hidden=n_hidden,
 			corruption_level=0.3,
 			optimizer=Adam)
-	hist = da.fit(x_train, x_valid, n_epoch=10)
+	hist = da.fit(x_train, x_valid, n_epoch=30)
 
 	df = pd.DataFrame(hist)
 	df.index += 1
@@ -163,4 +163,12 @@ if __name__ == '__main__':
 	plt.title("denoising autoencoder example")
 	plt.show()
 
+
+	from PIL import Image
+	image = Image.fromarray(tile_raster_images(
+		X=da.h.W.get_value(borrow=True).T,
+	    img_shape=(28, 28), tile_shape=(15, 15),
+	    tile_spacing=(1, 1)))
+	image.show()
+	image.save('da_result.png')
 

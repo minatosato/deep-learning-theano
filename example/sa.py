@@ -15,12 +15,13 @@ from dnn.optimizers import *
 from dnn.utils import *
 from tqdm import tqdm
 
+
 plt.style.use('ggplot')
 
 """Sparse Autoencoder"""
 class SA(object):
-	def __init__(self, rng,	input=None,	n_visible=784,
-		n_hidden=784, optimizer=Adam, W=None, b=None):
+	def __init__(self, rng,	input=None,	n_visible=784, 
+		n_hidden=784, sparse_reg=1e-3, optimizer=Adam, W=None, b=None):
 		self.rng = rng
 
 		"""symbol definition"""
@@ -38,7 +39,7 @@ class SA(object):
 			input=self.x,
 			n_input=n_visible,
 			n_output=n_hidden,
-			activation=relu,
+			activation=sigmoid,
 			W=W,
 			b=b
 		)
@@ -53,7 +54,7 @@ class SA(object):
 
 		"""loss accuracy error"""
 		self.metric = Metric(self.y.output, self.x)
-		sparsity_penalty = self.sparsity_penalty(self.h.output, sparsity_level=self.s_level, sparse_reg=1e-3, n_units=n_hidden)
+		sparsity_penalty = self.sparsity_penalty(self.h.output, sparsity_level=self.s_level, sparse_reg=sparse_reg, n_units=n_hidden)
 		self.loss = self.metric.mean_squared_error() + sparsity_penalty
 
 		"""parameters (i.e., weights and biases) for whole networks"""
@@ -64,20 +65,13 @@ class SA(object):
 		self.updates = self.optimizer.updates(self.loss)
 
 	def kl_divergence(self, p, p_hat):
-		# term1 = p * T.log(p)
-		# term2 = p * T.log(p_hat)
-		# term3 = (1-p) * T.log(1 - p)
-		# term4 = (1-p) * T.log(1 - p_hat)
-		# return term1 - term2 + term3 - term4
-		return p_hat - p + p * T.log(p / p_hat)
+		return p * T.log(p/p_hat) + (1-p)*T.log((1-p)/(1-p_hat))
 
 	def sparsity_penalty(self, h, sparsity_level=None, sparse_reg=1e-3, n_units=-1):
-		# sparsity_level = T.extra_ops.repeat(self.s_level, n_units)
-		sparsity_level = sparsity_level
-		avg_act = T.sum(h.mean(axis=0))
-		# avg_act = h.mean(axis=0)
+		sparsity_level = T.extra_ops.repeat(sparsity_level, n_units)
+		avg_act = h.mean(axis=0)
 		kl_div = self.kl_divergence(sparsity_level, avg_act)
-		sparsity_penalty = sparse_reg * kl_div#.sum()
+		sparsity_penalty = sparse_reg * kl_div.sum()
 		return sparsity_penalty
 
 	def fit(self, x_train, x_valid, batchsize=128, n_epoch=10):
@@ -96,7 +90,7 @@ class SA(object):
 			updates = self.updates,
 			givens = {
 				self.x: self.x_train[self.index*batchsize: (self.index+1)*batchsize],
-				self.s_level: np.cast['float32'](0.05),
+				self.s_level: np.cast['float32'](1e-2),
 			}
 		)
 
@@ -105,7 +99,7 @@ class SA(object):
 			outputs = self.loss,
 			givens = {
 				self.x: self.x_valid[self.index*batchsize: (self.index+1)*batchsize],
-				self.s_level: np.cast['float32'](0.05),
+				self.s_level: np.cast['float32'](1e-2),
 			}
 		)
 
@@ -155,10 +149,10 @@ if __name__ == '__main__':
 	print "... done"
 
 	n_visible = x_train.shape[1]
-	n_hidden = 2000
+	n_hidden = 784
 	rng = np.random.RandomState(random_state)
-	sa = SA(rng, n_visible=n_visible, n_hidden=n_hidden, optimizer=Adam)
-	hist = sa.fit(x_train, x_valid, n_epoch=10)
+	sa = SA(rng, n_visible=n_visible, n_hidden=n_hidden, sparse_reg=1e-3, optimizer=Adam)
+	hist = sa.fit(x_train, x_valid, n_epoch=30)
 
 	df = pd.DataFrame(hist)
 	df.index += 1
@@ -166,7 +160,15 @@ if __name__ == '__main__':
 
 	df[["loss", "val_loss"]].plot(linewidth=2, alpha=0.6)
 	plt.ylabel("loss function value")
-	plt.title("denoising autoencoder example")
+	plt.title("sparse autoencoder example")
 	plt.show()
+
+	from PIL import Image
+	image = Image.fromarray(tile_raster_images(
+		X=sa.h.W.get_value(borrow=True).T,
+	    img_shape=(28, 28), tile_shape=(15, 15),
+	    tile_spacing=(1, 1)))
+	image.show()
+	image.save('sa_result.png')
 
 
