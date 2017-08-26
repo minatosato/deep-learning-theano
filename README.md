@@ -1,29 +1,25 @@
 
-## Deep Learning Implementation with Theano
+# Deep Learning Implementation with Theano
 
-### About
+## About
 This repository is simple implementation of some deep learning algorithms.
 
-#### MNIST Examples
-##### Usage
-e.g., 
-```
-python example/mlp.py
-```
-or
+### MNIST Examples
+#### Usage
+e.g.
 ```
 cd example
 python mlp.py
 ```
 
-##### Files
+#### Files
 - Multi-Layer Perceptron (`example/mlp.py`)
 - Denoising Autoencoder (`example/da.py`)
 - Sparse Autoencoder (`example/sa.py`)
 - Convolutional Neural Network (`example/cnn.py`)
 
 
-#### Layers
+### Layers
 in `dnn/layer.py`
 
 - Fully-Connected Layer
@@ -32,7 +28,7 @@ in `dnn/layer.py`
 - Batch Normalization Layer
 
 
-#### Optimizers
+### Optimizers
 in `dnn/optimizers.py`
 
 - Stochastic Gradient Descent (SGD)
@@ -42,9 +38,10 @@ in `dnn/optimizers.py`
 - AdaDelta
 - Adam
 
-### Requirements
+## Requirements
+- Python3
 - [NumPy](http://www.numpy.org)
-- [Theano](http://deeplearning.net/software/theano/) == 0.8.2
+- [Theano](http://deeplearning.net/software/theano/) == 0.9.0
 - [Scikit-Learn](http://scikit-learn.org/stable/)
 - [tqdm](https://pypi.python.org/pypi/tqdm)
 - [Pandas](http://pandas.pydata.org) (for visualization)
